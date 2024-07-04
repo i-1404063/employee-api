@@ -1,0 +1,101 @@
+version: "3.8"
+
+services:
+  ques-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ques-api
+    ports:
+      - 5000:5000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - redispassword=
+      - redishost=ques-cache
+      - redisport=6379
+      - DB_USER=quesuser
+      - DB_PASS=ques123
+      - DB_NAME=questiondb
+      - DB_HOST=ques-db
+      - DB_PORT=
+      - NODE_ENV=development
+    command: sh -c "yarn install &&  yarn start"
+    networks:
+      - ques_pro
+    depends_on:
+      - ques-db
+      - ques-cache
+
+  ques-db:
+    image: postgres:14
+    container_name: ques
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ques123
+      POSTGRES_DB: questiondb
+      POSTGRES_USER: quesuser
+    command:
+      [
+        "postgres",
+        "-c",
+        "log_statement=all",
+        "-c",
+        "log_duration=on",
+        "-c",
+        "log_connections=on",
+        "-c",
+        "log_disconnections=on",
+      ]
+    volumes:
+      - questionprodb:/var/lib/postgresql/data
+    networks:
+      - ques_pro
+
+  quesadminer:
+    image: adminer
+    container_name: ques-adminer
+    restart: unless-stopped
+    ports:
+      - 3030:8080
+    networks:
+      - ques_pro
+    depends_on:
+      - ques-db
+
+  ques-cache:
+    image: redis:7-alpine
+    container_name: ques_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - ques_pro
+
+  # otel-collector:
+  #   image: otel/opentelemetry-collector
+  #   container_name: ques-collector
+  #   ports:
+  #     - "55681:55681"
+  #   networks:
+  #     - ques_pro
+
+  # jaeger:
+  #   image: jaegertracing/all-in-one:latest
+  #   ports:
+  #     - "6831:6831/udp"
+  #     - "16686:16686"
+  #   environment:
+  #     - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+  #   networks:
+  #     - ques_pro
+
+networks:
+  ques_pro:
+    driver: bridge
+
+volumes:
+  questionprodb:
