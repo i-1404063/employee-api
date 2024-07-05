@@ -1,16 +1,3 @@
-// const { Sequelize } = require('sequelize');
-// const pg = require('pg');
-// const config = require('../config/dbConfig')
-
-// pg.types.setTypeParser(1114, (val) => {
-//         return new Date(val + '+06:00');
-// })
-
-// const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS, config)
-
-
-// module.exports = sequelize;
-
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
